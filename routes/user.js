@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const {verifyUserRole} = require('../middlewares/auth');
+const {restrictToUserRole} = require('../middlewares/auth');
 
 const {
   handleGetAllUsers,
@@ -11,7 +11,7 @@ const {
 } = require("../controllers/user");
 // Routes
 
-router.use("/", verifyUserRole);
+router.use("/", restrictToUserRole);
 
 router
   .route("/")

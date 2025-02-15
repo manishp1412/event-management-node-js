@@ -1,29 +1,46 @@
-const {getUser} = require('../services/auth');
-async function restrictUnAuthorisedUser(req, res, next) {
-    const authToken = req.headers.authorization;
-    console.log('authToken data', authToken);
-    if(!authToken) {
-        return res.status(404).json({error: 'Bad Request'});
-    }
+const { getUser } = require("../services/auth");
+const sendResponse = require("../utils/sendResponse");
 
-    const user = getUser(authToken);
+async function checkForAuthentication(req, res, next) {
+  const authToken = req.headers.authorization;
+  req.user = null;
 
-    if(!user) {
-        return res.status(404).json({error: 'User not found'});
-    }
+  if (!authToken)
+    return sendResponse(res, {
+      status: 401,
+      message: 'Unauthorized',
+      error: 'Unauthorized'
+    });
+  // return res.status(401).json({message: 'Unauthorized'});
 
-    next();
-  };
+  const user = getUser(authToken);
 
-async function verifyUserRole(req, res, next) {
-    const authToken = req.headers.authorization;
-    const user = getUser(authToken);
-    const isOrganizer = user.role === 'Organizer';
-    console.log('isOrganizer ', isOrganizer);
-    if(!isOrganizer) {
-        return res.status(400).json({error: 'Access Denied: Insufficient Permissions'});
-    }
-    next();
-  };
+  req.user = user;
 
-module.exports = { restrictUnAuthorisedUser, verifyUserRole };
+  return next();
+}
+
+async function restrictToUserRole(req, res, next) {
+  if (!req.user) {
+    return sendResponse(res, {
+      status: 401,
+      message: 'Unauthorized',
+      error: 'Unauthorized'
+    });
+    // return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  console.log("current user role ", req.user.role);
+  const isOrganizer = req.user.role === "Organizer";
+  if (!isOrganizer) {
+    return sendResponse(res, {
+      status: 403,
+      message: 'No Permission',
+      error: 'No Permission'
+    });
+    // return res.status(403).json({ message: "No Permission" });
+  }
+  next();
+}
+
+module.exports = { checkForAuthentication, restrictToUserRole };

@@ -2,7 +2,7 @@ const express = require('express');
 
 const cookieParser = require('cookie-parser');
 
-const {restrictUnAuthorisedUser} = require('./middlewares/auth');
+const {restrictUnAuthorisedUser, checkForAuthentication} = require('./middlewares/auth');
 
 const cors = require('cors');
 
@@ -13,7 +13,7 @@ const PORT = 8000;
 // Allow requests from your React app's origin (http://localhost:8000)
 app.use(cors({
     origin: `http://localhost:5173`, // React's dev server URL
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
   }));
 
@@ -47,12 +47,8 @@ app.use("/api/signup", userSignup);
 
 app.use("/api/login", userLogin);
 
-app.use("/api/user", restrictUnAuthorisedUser);
+app.use("/api/user", checkForAuthentication, userRouter);
 
-app.use("/api/user", userRouter);
-
-app.use("/api/event", restrictUnAuthorisedUser);
-
-app.use("/api/event", eventRouter);
+app.use("/api/event", checkForAuthentication, eventRouter);
 
 app.listen(PORT, () => console.log('Server started at ', PORT));

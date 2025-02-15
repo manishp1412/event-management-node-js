@@ -50,8 +50,6 @@ async function handleJoinEvent(req, res) {
       ...eventData,
       participants: [...eventData.participants, newParticipant],
     };
-    console.log("requestedEvent data ", JSON.stringify(requestedEvent));
-    console.log("updated event data ", JSON.stringify(updatedEventData));
     await Event.findByIdAndUpdate(req.params.id, updatedEventData);
     return res.json({ status: "Success" });
   }

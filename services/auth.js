@@ -1,9 +1,7 @@
 const jwt = require('jsonwebtoken');
 const secret = "ManishTestNode";
 
-
 function setUser(user) {
-    console.log('user.role ', user.role);
     const payload = {
         _id: user._id,
         email: user.email,

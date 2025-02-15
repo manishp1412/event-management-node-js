@@ -1,29 +1,43 @@
 const User = require("../models/user");
 const {setUser} = require('../services/auth');
+const sendResponse = require("../utils/sendResponse");
 async function handleGetAllUsers(req, res) {
-  const allDbUsers = await User.find({});
-  return res.json(allDbUsers);
+  const allDbUsers = await User.find({}).select('-password -__v');
+  return sendResponse(res, {
+    data: allDbUsers
+  });
 }
 
 async function handleGetUserById(req, res) {
   const user = await User.findById(req.params.id);
   if (!user) {
-    return res.status(404).json({ error: "User Not Found" });
+    sendResponse(res, {
+      status: 404,
+      success: false,
+      error: 'User Not Found'
+    });
   }
-  return res.json(user);
+  return sendResponse(res, {
+    message: 'User fetched successfully',
+    data: user
+  });
 }
 
 async function handleUpdateUserById(req, res) {
   const { id } = req?.params;
   const body = req.body;
   await User.findByIdAndUpdate(id, body);
-  return res.json({ status: "Success" });
+  return sendResponse(res, {
+    message: 'User updated successfully',
+  });
 }
 
 async function handleDeleteUserById(req, res) {
   const { id } = req?.params;
   await User.findByIdAndDelete(id);
-  return res.json({ status: "Success" });
+  return sendResponse(res, {
+    message: 'User deleted successfully',
+  });
 }
 
 
@@ -38,19 +52,35 @@ async function handleSignup(req, res) {
     !body.password ||
     !body.role 
   ) {
-    return res.status(400).json({ error: "All fields are required to proceed for signup" });
+    return sendResponse(res, {
+      status: 400,
+      success: false,
+      error: 'All fields are required to proceed for signup'
+    });
   }
   if (body.role !== 'Organizer' && body.role !== 'Participant') {
-    return res.status(400).json({ error: "Role must be either 'Organizer' or 'Participant'" });
+    return sendResponse(res, {
+      status: 400,
+      success: false,
+      error: "Role must be either 'Organizer' or 'Participant'"
+    });
   }
   const users = await User.find({});
   const isEmailExist = users.find(e => (e.email === body.email));
   const isPhoneExist = users.find(e => (e.phone_number === body.phone_number));
   if(isEmailExist) {
-    return res.status(404).json({error: 'Email already exist'});
+    return sendResponse(res, {
+      status: 404,
+      success: false,
+      error: 'Email already exist'
+    });
   }
   if(isPhoneExist) {
-    return res.status(404).json({error: 'Phone number already exist'});
+    return sendResponse(res, {
+      status: 404,
+      success: false,
+      error: 'Phone number already exist'
+    });
   }
   const result = await User.create({
     full_name: body.full_name,
@@ -59,8 +89,11 @@ async function handleSignup(req, res) {
     password: body.password,
     role: body.role
   });
-  console.log("created user ", result);
-  return res.status(201).json({ msg: "success", id: result._id });
+  return sendResponse(res, {
+    status: 201,
+    message: 'User created successfully',
+    data: {id: result._id}
+  });
 }
 
 async function handleLogin(req, res) {
@@ -69,12 +102,17 @@ async function handleLogin(req, res) {
   const {email, password} = body;
   const user = await User.findOne({email, password});
   if(!user) {
-    return res.status(404).json({error: 'Invalid email or password'});
+    return sendResponse(res, {
+      status: 404,
+      success: false,
+      error: 'Invalid email or password'
+    });
   }
   const token = setUser(user);
-  console.log('token ', token);
   res.cookie("uid", token);
-  return res.status(201).json({ msg: "success", token, user: user.toObject() });
+  return sendResponse(res, {
+    data: {token, user: user.toObject()}
+  });
 }
 
 module.exports = {
