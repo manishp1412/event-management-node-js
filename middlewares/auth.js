@@ -11,7 +11,6 @@ async function checkForAuthentication(req, res, next) {
       message: 'Unauthorized',
       error: 'Unauthorized'
     });
-  // return res.status(401).json({message: 'Unauthorized'});
 
   const user = getUser(authToken);
 
@@ -27,7 +26,6 @@ async function restrictToUserRole(req, res, next) {
       message: 'Unauthorized',
       error: 'Unauthorized'
     });
-    // return res.status(401).json({ message: "Unauthorized" });
   }
 
   console.log("current user role ", req.user.role);
@@ -38,7 +36,6 @@ async function restrictToUserRole(req, res, next) {
       message: 'No Permission',
       error: 'No Permission'
     });
-    // return res.status(403).json({ message: "No Permission" });
   }
   next();
 }

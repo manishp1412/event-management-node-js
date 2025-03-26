@@ -1,6 +1,8 @@
 const User = require("../models/user");
 const {setUser} = require('../services/auth');
 const sendResponse = require("../utils/sendResponse");
+const bcrypt = require('bcrypt');
+
 async function handleGetAllUsers(req, res) {
   const allDbUsers = await User.find({}).select('-password -__v');
   return sendResponse(res, {
@@ -23,6 +25,7 @@ async function handleGetUserById(req, res) {
   });
 }
 
+
 async function handleUpdateUserById(req, res) {
   const { id } = req?.params;
   const body = req.body;
@@ -39,6 +42,48 @@ async function handleDeleteUserById(req, res) {
     message: 'User deleted successfully',
   });
 }
+
+async function handleApproveOrDeclineUser(req, res) {
+  try {
+    const { id } = req.params;
+    const { approved } = req.body; // true for approval, false for decline
+
+    // Validate input
+    if (typeof approved !== "boolean") {
+      return sendResponse(res, {
+        status: 400,
+        success: false,
+        error: "Invalid request. 'approved' must be true or false.",
+      });
+    }
+
+    // Find and update user approval status
+    const user = await User.findByIdAndUpdate(id, { status: approved ? 'Approve' : 'Decline' }, { new: true });
+    
+    if (!user) {
+      return sendResponse(res, {
+        status: 404,
+        success: false,
+        error: "User not found.",
+      });
+    }
+
+    return sendResponse(res, {
+      success: true,
+      message: `User has been ${approved ? "approved" : "Declined"} successfully.`,
+      data: user,
+    });
+  } catch (error) {
+    console.error("Approval Error:", error);
+    return sendResponse(res, {
+      status: 500,
+      success: false,
+      error: "Something went wrong. Please try again later.",
+    });
+  }
+}
+
+
 
 
 async function handleSignup(req, res) {
@@ -82,11 +127,15 @@ async function handleSignup(req, res) {
       error: 'Phone number already exist'
     });
   }
+  
+  // Hash the password before saving
+  const hashedPassword = await bcrypt.hash(body.password, 10);
+
   const result = await User.create({
     full_name: body.full_name,
     email: body.email,
     phone_number: body.phone_number,
-    password: body.password,
+    password: hashedPassword, // Save the hashed password
     role: body.role
   });
   return sendResponse(res, {
@@ -100,7 +149,7 @@ async function handleLogin(req, res) {
   res.clearCookie("uid");
   const body = req.body;
   const {email, password} = body;
-  const user = await User.findOne({email, password});
+  const user = await User.findOne({email});
   if(!user) {
     return sendResponse(res, {
       status: 404,
@@ -108,6 +157,27 @@ async function handleLogin(req, res) {
       error: 'Invalid email or password'
     });
   }
+
+  // Compare the provided password with the hashed password
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    return sendResponse(res, {
+      status: 404,
+      success: false,
+      error: 'Invalid email or password'
+    });
+  }
+
+  // Check if user is approved
+  if (user.status != 'Approve') {
+    return sendResponse(res, {
+      status: 403,
+      success: false,
+      error: "Your account is pending approval. Please wait for an organizer's approval.",
+    });
+  }
+
+
   const token = setUser(user);
   res.cookie("uid", token);
   return sendResponse(res, {
@@ -120,6 +190,7 @@ module.exports = {
   handleGetUserById,
   handleUpdateUserById,
   handleDeleteUserById,
+  handleApproveOrDeclineUser,
   handleSignup,
   handleLogin
 };

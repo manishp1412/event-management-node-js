@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    status: {
+        type: String,
+        enum: ['Approve', 'Decline'], 
+        default: 'Decline',
+    },
     role: {
         type: String,
         enum: ['Organizer', 'Participant'],

@@ -7,16 +7,16 @@ const {
   handleGetEventById,
   handleUpdateEventById,
   handleDeleteEventById,
-} = require("../controllers/event");
+  handleAcceptDeclineRequest,
+} = require("../controllers/eventController");
 
-const {handleJoinEvent, getEventParticipants} = require("../controllers/participant");
+const {
+  handleJoinEvent,
+  getEventParticipants,
+} = require("../controllers/participantController");
 // Routes
 
-router
-  .route("/")
-  .post(handleCreateEvent)
-  .get(handleGetAllEvents);
-
+router.route("/").post(handleCreateEvent).get(handleGetAllEvents);
 
 router
   .route("/:id")
@@ -25,13 +25,12 @@ router
   .patch(handleUpdateEventById)
   .delete(handleDeleteEventById);
 
-router
-  .route("/:id/join")
-  .post(handleJoinEvent);
 
-router
-  .route("/:id/participants")
-  .get(getEventParticipants)
+router.route("/:id/approve-decline").put(handleAcceptDeclineRequest);
 
 
-module.exports = router
+router.route("/:id/join").post(handleJoinEvent);
+
+router.route("/:id/participants").get(getEventParticipants);
+
+module.exports = router;

@@ -1,21 +1,24 @@
 const express = require('express');
-
 const cookieParser = require('cookie-parser');
-
-const {restrictUnAuthorisedUser, checkForAuthentication} = require('./middlewares/auth');
-
+const {checkForAuthentication} = require('./middlewares/auth');
 const cors = require('cors');
+const helmet = require('helmet');
+require('dotenv').config();
 
 const app = express();
 
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 
-// Allow requests from your React app's origin (http://localhost:8000)
+// Security middleware
+app.use(helmet());
+
+// CORS configuration
 app.use(cors({
-    origin: `http://localhost:5173`, // React's dev server URL
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  }));
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true 
+}));
 
 app.use(cookieParser());
 
@@ -30,8 +33,7 @@ const userLogin = require('./routes/login');
 const {logReqRes} = require('./middlewares');
 
 const {connectMongoDb} = require('./connection');
-// Connection
-connectMongoDb('mongodb://127.0.0.1:27017/event-node-app');
+const { uploadFile } = require('./controllers/uploadController');
 
 // Middleware to parse form urlencoded data
 app.use(express.urlencoded({extended: false}));
@@ -42,6 +44,9 @@ app.use(express.json());
 
 app.use(logReqRes('log.txt'));
 
+// Serve static files from "events" directory
+app.use("/events", express.static("events"));
+
 // Routes
 app.use("/api/signup", userSignup);
 
@@ -50,5 +55,17 @@ app.use("/api/login", userLogin);
 app.use("/api/user", checkForAuthentication, userRouter);
 
 app.use("/api/event", checkForAuthentication, eventRouter);
+
+app.use("/upload", uploadFile);
+
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!' });
+});
+
+
+// Connection
+connectMongoDb(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/event-node-app');
 
 app.listen(PORT, () => console.log('Server started at ', PORT));

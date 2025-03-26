@@ -8,7 +8,8 @@ const {
   handleGetUserById,
   handleUpdateUserById,
   handleDeleteUserById,
-} = require("../controllers/user");
+  handleApproveOrDeclineUser,
+} = require("../controllers/userController");
 // Routes
 
 router.use("/", restrictToUserRole);
@@ -23,5 +24,9 @@ router
   .get(handleGetUserById)
   .patch(handleUpdateUserById)
   .delete(handleDeleteUserById);
+
+router
+  .route("/:id/approval")
+  .patch(handleApproveOrDeclineUser)
 
 module.exports = router

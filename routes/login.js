@@ -3,7 +3,7 @@ const router = express.Router();
 
 const {
     handleLogin
-} = require("../controllers/user");
+} = require("../controllers/userController");
 // Routes
 
 router

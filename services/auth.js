@@ -4,10 +4,11 @@ const secret = "ManishTestNode";
 function setUser(user) {
     const payload = {
         _id: user._id,
+        name: user.full_name,
         email: user.email,
         role: user.role
     }
-    return jwt.sign(payload, secret);
+    return jwt.sign(payload, secret, {expiresIn: '2d'});
 }
 
 function getUser(token) {

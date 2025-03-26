@@ -1,28 +1,5 @@
 const mongoose = require('mongoose');
-// Mongoose Schema
-
-const participantSchema = new mongoose.Schema({
-    eventId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'event',
-        required: true,
-    },
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'user',
-        required: true,
-    },
-    status: {
-        type: String,
-        enum: ['Pending', 'Approved', 'Declined'], 
-        default: 'Pending',
-    },
-    joinedAt: {
-        type: Date,
-        default: Date.now
-    },
-}, { timestamps: true });
-
+const Participant = require('./participant'); // Importing the Participant model
 
 const eventSchema = new mongoose.Schema({
     title: {
@@ -46,8 +23,17 @@ const eventSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    createdBy: {
+        type: String,
+        required: true,
+    },
+    status: {
+        type: String,
+        enum: ['Active', 'Completed', 'Cancelled'], 
+        default: 'Active',
+    },
     participants: {
-        type: [participantSchema],
+        type: [Participant.schema],
         default: [],
     },
 }, {timestamps: true});

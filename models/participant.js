@@ -2,22 +2,26 @@ const mongoose = require('mongoose');
 
 // Participant Schema
 const participantSchema = new mongoose.Schema({
-    eventId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'event',
-        required: true,
-    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
         required: true,
+    },
+    name: {
+        type: String,
+        required: true,
+    },
+    email: {
+        type: String,
+        required: true,
+        sparse: true,
     },
     status: {
         type: String,
         enum: ['Pending', 'Approved', 'Declined'], 
         default: 'Pending',
     },
-    joinedAt: {
+    requestDate: {
         type: Date,
         default: Date.now
     },
